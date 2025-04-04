@@ -29,9 +29,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false }) => {
         
         <div className="flex items-center gap-2 font-bold text-xl text-primary mr-4">
           <div className="hidden md:block rounded-lg bg-primary p-1">
-            <span className="text-white">Socio</span>
+            <span className="text-white">Comm</span>
           </div>
-          <span className="text-socio-darkgreen">Sphere</span>
+          <span className="text-socio-darkgreen">Unity</span>
         </div>
         
         <div className="hidden md:flex flex-1 items-center gap-5 lg:gap-6">

@@ -38,9 +38,9 @@ const Index = () => {
               <div className="text-center md:text-left">
                 <div className="flex items-center justify-center md:justify-start gap-2 font-bold text-xl mb-2">
                   <div className="rounded-lg bg-primary p-1">
-                    <span className="text-white">Socio</span>
+                    <span className="text-white">Comm</span>
                   </div>
-                  <span className="text-socio-darkgreen">Sphere</span>
+                  <span className="text-socio-darkgreen">Unity</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Connecting communities for collaborative problem solving
@@ -221,7 +221,7 @@ const WelcomePage = () => {
   return (
     <div className="flex flex-col items-center justify-center text-center max-w-3xl mx-auto py-12">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Welcome to SocioSphere</h1>
+        <h1 className="text-4xl font-bold mb-4">Welcome to CommUnity</h1>
         <p className="text-xl text-muted-foreground mb-6">
           Connect with your local community to solve problems together
         </p>

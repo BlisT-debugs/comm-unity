@@ -52,9 +52,9 @@ const AppSidebar = () => {
       <SidebarHeader className="flex items-center gap-2 py-4">
         <div className="flex items-center gap-2 px-2 font-bold text-xl">
           <div className="rounded-lg bg-primary p-1">
-            <span className="text-white">Socio</span>
+            <span className="text-white">Comm</span>
           </div>
-          <span className="text-sidebar-foreground">Sphere</span>
+          <span className="text-sidebar-foreground">Unity</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
