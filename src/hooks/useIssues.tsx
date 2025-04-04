@@ -55,9 +55,11 @@ export const useIssues = (options?: UseIssuesOptions) => {
       throw new Error('Failed to fetch issues');
     }
     
+    // Convert string status to the proper type
     return data.map(issue => ({
       ...issue,
-      community_name: issue.communities?.name
+      community_name: issue.communities?.name,
+      status: issue.status as 'open' | 'in-progress' | 'completed'
     })) || [];
   };
 

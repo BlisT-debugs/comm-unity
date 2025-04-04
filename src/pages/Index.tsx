@@ -3,7 +3,7 @@ import React from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppHeader from '@/components/layout/AppHeader';
 import AppSidebar from '@/components/layout/AppSidebar';
-import LoggedInDashboard from '@/components/dashboard/LoggedInDashboard';
+import LoggedInDashboard from '@/components/home/DashboardContent';
 import WelcomePage from '@/components/home/WelcomePage';
 import { useAuth } from '@/hooks/useAuth';
 
