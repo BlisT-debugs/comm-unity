@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, Menu, Search, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Bell, Menu, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,12 +14,45 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface AppHeaderProps {
   isLoggedIn?: boolean;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false }) => {
+const AppHeader: React.FC<AppHeaderProps> = () => {
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const isLoggedIn = !!user;
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to log out');
+    }
+  };
+
+  const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(' ')
+        .map((name: string) => name[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    
+    if (profile?.username) {
+      return profile.username.substring(0, 2).toUpperCase();
+    }
+    
+    return user?.email?.substring(0, 2).toUpperCase() || 'U';
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -59,33 +92,34 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false }) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder.svg" alt="User" />
-                      <AvatarFallback>JD</AvatarFallback>
+                      <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.username || "User"} />
+                      <AvatarFallback>{getInitials()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">John Doe</p>
+                      <p className="text-sm font-medium leading-none">{profile?.full_name || profile?.username || "User"}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        john.doe@example.com
+                        {user?.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    Profile
+                    <Link to="/profile" className="flex w-full items-center">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    My Communities
+                    <Link to="/communities" className="flex w-full items-center">My Communities</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    Achievements
+                    <Link to="/achievements" className="flex w-full items-center">Achievements</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    Log out
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -93,10 +127,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false }) => {
           ) : (
             <>
               <Button variant="outline" asChild>
-                <Link to="/login">Log in</Link>
+                <Link to="/auth">Log in</Link>
               </Button>
               <Button asChild>
-                <Link to="/signup">Sign up</Link>
+                <Link to="/auth?tab=signup">Sign up</Link>
               </Button>
             </>
           )}
