@@ -43,7 +43,7 @@ const DashboardContent: React.FC = () => {
         />
         <DashboardCard 
           title="My Communities" 
-          value={user ? (communities.length || "0") : "0"} 
+          value={(user ? communities.length : 0).toString()} 
           description={user ? "Communities you've joined" : "Sign in to join communities"}
           icon={<Users className="h-4 w-4 text-muted-foreground" />}
         />

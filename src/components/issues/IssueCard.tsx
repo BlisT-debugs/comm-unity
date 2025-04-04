@@ -21,6 +21,7 @@ interface IssueCardProps {
   progress: number;
   createdAt: string;
   className?: string;
+  onUpvote?: () => Promise<void>;
 }
 
 const statusStyles = {
@@ -43,6 +44,7 @@ const IssueCard: React.FC<IssueCardProps> = ({
   progress,
   createdAt,
   className,
+  onUpvote
 }) => {
   return (
     <Card className={cn("card-hover", className)}>
@@ -90,7 +92,10 @@ const IssueCard: React.FC<IssueCardProps> = ({
       <CardFooter>
         <div className="flex w-full justify-between text-sm">
           <div className="flex items-center gap-3">
-            <div className="flex items-center text-muted-foreground">
+            <div 
+              className="flex items-center text-muted-foreground cursor-pointer hover:text-primary"
+              onClick={onUpvote}
+            >
               <ThumbsUp className="mr-1 h-4 w-4" />
               <span>{upvotes}</span>
             </div>
