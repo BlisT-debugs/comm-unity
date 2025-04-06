@@ -1,5 +1,3 @@
-
-// Fix TypeScript issues
 import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,8 +26,8 @@ const Communities = () => {
   
   // Get communities based on active tab
   const { communities, isLoading, refetch } = useCommunities({
-    search: searchQuery || undefined,
-    joined: activeTab === 'joined' ? true : undefined
+    search: searchQuery,
+    joined: activeTab === 'joined'
   });
   
   const handleCreateCommunity = async () => {
@@ -61,7 +59,7 @@ const Communities = () => {
           name, 
           description, 
           location: location || null,
-          created_by: user.id,
+          creator_id: user.id,
           member_count: 1 // Creator is the first member
         }])
         .select();
@@ -72,11 +70,11 @@ const Communities = () => {
         // Add creator as a member
         const { error: memberError } = await supabase
           .from('community_members')
-          .insert([{ 
+          .insert({ 
             community_id: communityData[0].id, 
-            user_id: user.id,
-            role: 'admin' 
-          }]);
+            profile_id: user.id,
+            is_moderator: true
+          });
         
         if (memberError) throw memberError;
       }
@@ -122,7 +120,7 @@ const Communities = () => {
         .from('community_members')
         .select()
         .eq('community_id', communityId)
-        .eq('user_id', user.id)
+        .eq('profile_id', user.id)
         .single();
       
       if (existingMembership) {
@@ -136,11 +134,11 @@ const Communities = () => {
       // Add user as a member
       const { error: memberError } = await supabase
         .from('community_members')
-        .insert([{ 
+        .insert({ 
           community_id: communityId, 
-          user_id: user.id,
-          role: 'member' 
-        }]);
+          profile_id: user.id,
+          is_moderator: false
+        });
       
       if (memberError) throw memberError;
       

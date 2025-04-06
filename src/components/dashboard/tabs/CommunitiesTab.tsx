@@ -1,30 +1,28 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
 import CommunityCard from '@/components/community/CommunityCard';
 import { useCommunities } from '@/hooks/useCommunities';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
-interface CommunitiesTabProps {
-  limit?: number;
-  showJoined?: boolean;
-}
-
-const CommunitiesTab: React.FC<CommunitiesTabProps> = ({ limit = 3, showJoined = false }) => {
-  const { communities, isLoading } = useCommunities({ limit, joined: showJoined });
+const CommunitiesTab = () => {
+  const navigate = useNavigate();
+  const { communities, isLoading } = useCommunities({ limit: 6 });
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          <>
-            <div className="h-64 bg-muted animate-pulse rounded-md"></div>
-            <div className="h-64 bg-muted animate-pulse rounded-md"></div>
-            <div className="h-64 bg-muted animate-pulse rounded-md"></div>
-          </>
-        ) : communities.length > 0 ? (
-          communities.map((community) => (
-            <CommunityCard 
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-44 bg-muted animate-pulse rounded-md"></div>
+          ))}
+        </div>
+      ) : communities.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {communities.map((community) => (
+            <CommunityCard
               key={community.id}
               id={community.id}
               name={community.name}
@@ -32,23 +30,23 @@ const CommunitiesTab: React.FC<CommunitiesTabProps> = ({ limit = 3, showJoined =
               memberCount={community.member_count}
               categories={['Community']}
               imageUrl={community.image_url || undefined}
-              joined={showJoined}
+              joined={false}
             />
-          ))
-        ) : (
-          <div className="col-span-3 text-center py-12">
-            <p className="text-muted-foreground mb-4">
-              {showJoined ? "You haven't joined any communities yet" : "No communities found"}
-            </p>
-            <Button asChild>
-              <Link to="/communities">{showJoined ? "Explore Communities" : "Create Community"}</Link>
-            </Button>
-          </div>
-        )}
-      </div>
-      <div className="flex justify-center mt-6">
-        <Button variant="outline" asChild>
-          <Link to="/communities">View All Communities</Link>
+          ))}
+        </div>
+      ) : (
+        <Card className="p-6 flex flex-col items-center justify-center">
+          <p className="text-muted-foreground mb-4">No communities found</p>
+          <Button onClick={() => navigate('/communities')}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Create a Community
+          </Button>
+        </Card>
+      )}
+
+      <div className="flex justify-center mt-4">
+        <Button variant="outline" onClick={() => navigate('/communities')}>
+          View All Communities
         </Button>
       </div>
     </div>

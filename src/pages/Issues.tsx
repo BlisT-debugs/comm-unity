@@ -1,4 +1,3 @@
-
 // Fix TypeScript errors
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -107,7 +106,7 @@ const Issues = () => {
             category, 
             community_id: communityId,
             status: 'open',
-            created_by: user.id
+            creator_id: user.id
           }
         ])
         .select();
@@ -152,28 +151,31 @@ const Issues = () => {
     
     try {
       // Check if user already upvoted this issue
-      const { data: existingUpvote } = await supabase
-        .from('issue_upvotes')
+      const { data: existingVote } = await supabase
+        .from('votes')
         .select()
         .eq('issue_id', issueId)
-        .eq('user_id', user.id)
+        .eq('profile_id', user.id)
         .single();
       
-      if (existingUpvote) {
+      if (existingVote) {
         // User already upvoted, so remove the upvote
         await supabase
-          .from('issue_upvotes')
+          .from('votes')
           .delete()
           .eq('issue_id', issueId)
-          .eq('user_id', user.id);
+          .eq('profile_id', user.id);
           
         // Decrement the upvote count
         await supabase.rpc('decrement_upvote', { row_id: issueId });
       } else {
         // Add new upvote
         await supabase
-          .from('issue_upvotes')
-          .insert([{ issue_id: issueId, user_id: user.id }]);
+          .from('votes')
+          .insert({ 
+            issue_id: issueId, 
+            profile_id: user.id 
+          });
           
         // Increment the upvote count
         await supabase.rpc('increment_upvote', { row_id: issueId });

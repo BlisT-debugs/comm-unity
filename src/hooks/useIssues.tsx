@@ -16,7 +16,7 @@ export const useIssues = (options: UseIssuesOptions = {}) => {
   const { user } = useAuth();
   const { limit, search, status, category, communityId, mine } = options;
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['issues', limit, search, status, category, communityId, mine, user?.id],
     queryFn: async () => {
       let query = supabase
@@ -53,7 +53,7 @@ export const useIssues = (options: UseIssuesOptions = {}) => {
 
       // Get issues created by the user
       if (mine && user) {
-        query = query.eq('created_by', user.id);
+        query = query.eq('creator_id', user.id);
       }
 
       // Order by most recent
@@ -73,4 +73,12 @@ export const useIssues = (options: UseIssuesOptions = {}) => {
     },
     enabled: true,
   });
+
+  return {
+    issues: query.data || [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  };
 };
