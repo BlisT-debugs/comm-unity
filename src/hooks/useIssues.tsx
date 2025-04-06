@@ -22,11 +22,17 @@ export const useIssues = (options: UseIssuesOptions = {}) => {
       let query = supabase
         .from('issues')
         .select(`
-          *,
+          id,
+          title,
+          description,
+          category,
+          status,
+          created_at,
+          upvote_count,
+          community_id,
           communities (
             id,
-            name,
-            description
+            name
           )
         `);
 
@@ -71,7 +77,8 @@ export const useIssues = (options: UseIssuesOptions = {}) => {
         community_name: issue.communities?.name
       }));
     },
-    enabled: true,
+    staleTime: 60000, // 1 minute
+    enabled: !mine || !!user, // Don't run if we need user's issues but user is not logged in
   });
 
   return {

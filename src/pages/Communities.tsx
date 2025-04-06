@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -8,15 +8,18 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import CommunityCard from '@/components/community/CommunityCard';
+import CommunityCardSkeleton from '@/components/community/CommunityCardSkeleton';
 import { useCommunities } from '@/hooks/useCommunities';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Lazy load the CommunityCard component
+const CommunityCard = lazy(() => import('@/components/community/CommunityCard'));
+
 const Communities = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'joined'>('all');
   
   // States for community creation dialog
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
@@ -237,7 +240,11 @@ const Communities = () => {
         
         <div className="md:w-1/4">
           {user && (
-            <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value)} className="w-full">
+            <Tabs 
+              value={activeTab} 
+              onValueChange={(value: 'all' | 'joined') => setActiveTab(value)} 
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="all">All Communities</TabsTrigger>
                 <TabsTrigger value="joined">Joined</TabsTrigger>
@@ -250,23 +257,24 @@ const Communities = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-64 bg-muted animate-pulse rounded-md"></div>
+            <CommunityCardSkeleton key={i} />
           ))}
         </div>
       ) : communities.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {communities.map((community) => (
-            <CommunityCard 
-              key={community.id}
-              id={community.id}
-              name={community.name}
-              description={community.description || ''}
-              memberCount={community.member_count}
-              categories={['Community']}
-              imageUrl={community.image_url || undefined}
-              joined={activeTab === 'joined'}
-              onJoin={() => handleJoinCommunity(community.id)}
-            />
+            <Suspense key={community.id} fallback={<CommunityCardSkeleton />}>
+              <CommunityCard 
+                id={community.id}
+                name={community.name}
+                description={community.description || ''}
+                memberCount={community.member_count}
+                categories={['Community']}
+                imageUrl={community.image_url || undefined}
+                joined={activeTab === 'joined'}
+                onJoin={() => handleJoinCommunity(community.id)}
+              />
+            </Suspense>
           ))}
         </div>
       ) : (
