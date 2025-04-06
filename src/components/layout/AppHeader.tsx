@@ -1,24 +1,14 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Menu, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { User, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 
 interface AppHeaderProps {
-  isLoggedIn?: boolean;
+  // Add any props here if needed
 }
 
 const AppHeader: React.FC<AppHeaderProps> = () => {
@@ -33,91 +23,75 @@ const AppHeader: React.FC<AppHeaderProps> = () => {
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
-      toast.error('Failed to log out');
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
     }
-  };
-
-  const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ')
-        .map((name: string) => name[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-    }
-    
-    if (profile?.username) {
-      return profile.username.substring(0, 2).toUpperCase();
-    }
-    
-    return user?.email?.substring(0, 2).toUpperCase() || 'U';
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <SidebarTrigger className="mr-2 lg:hidden">
-          <Menu className="h-6 w-6" />
-        </SidebarTrigger>
-        
-        <div className="flex items-center gap-2 font-bold text-xl text-primary mr-4">
-          <div className="hidden md:block rounded-lg bg-primary p-1">
-            <span className="text-white">Comm</span>
-          </div>
-          <span className="text-socio-darkgreen">Unity</span>
+    <header className="border-b">
+      <div className="container flex items-center justify-between h-16">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+            <div className="rounded-lg bg-primary p-1">
+              <span className="text-white">Comm</span>
+            </div>
+            <span>Unity</span>
+          </Link>
+          
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/communities" className="text-sm font-medium hover:text-primary transition-colors">
+              Communities
+            </Link>
+            <Link to="/issues" className="text-sm font-medium hover:text-primary transition-colors">
+              Issues
+            </Link>
+            <Link to="/search" className="text-sm font-medium hover:text-primary transition-colors">
+              Advanced Search
+            </Link>
+          </nav>
         </div>
         
-        <div className="hidden md:flex flex-1 items-center gap-5 lg:gap-6">
-          <div className="relative w-full max-w-sm lg:max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search communities or issues..."
-              className="w-full pl-8 bg-background"
-            />
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-                  3
-                </span>
-              </Button>
-              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.username || "User"} />
-                      <AvatarFallback>{getInitials()}</AvatarFallback>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar>
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {profile?.username?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{profile?.full_name || profile?.username || "User"}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Link to="/profile" className="flex w-full items-center">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link to="/communities" className="flex w-full items-center">My Communities</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link to="/achievements" className="flex w-full items-center">Achievements</Link>
-                  </DropdownMenuItem>
+                  <Link to="/profile">
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to="/dashboard">
+                    <DropdownMenuItem>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Dashboard</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to="/settings">
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                  <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -125,14 +99,7 @@ const AppHeader: React.FC<AppHeaderProps> = () => {
               </DropdownMenu>
             </>
           ) : (
-            <>
-              <Button variant="outline" asChild>
-                <Link to="/auth">Log in</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/auth?tab=signup">Sign up</Link>
-              </Button>
-            </>
+            <Button onClick={() => navigate('/auth')}>Sign In</Button>
           )}
         </div>
       </div>
