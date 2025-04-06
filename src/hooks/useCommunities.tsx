@@ -7,7 +7,7 @@ interface Community {
   id: string;
   name: string;
   description: string | null;
-  location: string;
+  location: string | null;  // Changed from required to nullable to match DB schema
   image_url: string | null;
   member_count: number;
   created_at: string;

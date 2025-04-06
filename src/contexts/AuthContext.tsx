@@ -7,6 +7,8 @@ interface Profile {
   username: string;
   full_name: string | null;
   avatar_url: string | null;
+  bio: string | null;
+  location: string | null;
   impact_score: number;
 }
 

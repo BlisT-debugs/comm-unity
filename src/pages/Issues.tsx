@@ -65,10 +65,10 @@ const Issues = () => {
     }
   }, [location]);
   
-  // Get issues with filters
+  // Get issues based on active tab
   const { issues, isLoading, refetch } = useIssues({
     search: searchQuery || undefined,
-    status: statusFilter as any || undefined,
+    status: statusFilter as 'open' | 'in-progress' | 'completed' | undefined,
     category: categoryFilter || undefined,
     communityId: communityFilter || undefined,
     mine: activeTab === 'mine' ? true : undefined
