@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +16,7 @@ import { toast } from '@/hooks/use-toast';
 const Communities = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<string>('all');
   
   // States for community creation dialog
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
@@ -236,7 +237,7 @@ const Communities = () => {
         
         <div className="md:w-1/4">
           {user && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="all">All Communities</TabsTrigger>
                 <TabsTrigger value="joined">Joined</TabsTrigger>

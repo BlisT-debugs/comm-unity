@@ -55,7 +55,7 @@ const Issues = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [communityFilter, setCommunityFilter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<string>('all');
   
   // Parse query parameters
   useEffect(() => {
@@ -326,7 +326,10 @@ const Issues = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label>Status</Label>
-                  <Select value={statusFilter || ''} onValueChange={(val) => setStatusFilter(val || null)}>
+                  <Select 
+                    value={statusFilter || ''} 
+                    onValueChange={(val: string) => setStatusFilter(val || null)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Any status" />
                     </SelectTrigger>
@@ -340,7 +343,10 @@ const Issues = () => {
                 </div>
                 <div className="grid gap-2">
                   <Label>Category</Label>
-                  <Select value={categoryFilter || ''} onValueChange={(val) => setCategoryFilter(val || null)}>
+                  <Select 
+                    value={categoryFilter || ''} 
+                    onValueChange={(val: string) => setCategoryFilter(val || null)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Any category" />
                     </SelectTrigger>
@@ -354,7 +360,10 @@ const Issues = () => {
                 </div>
                 <div className="grid gap-2">
                   <Label>Community</Label>
-                  <Select value={communityFilter || ''} onValueChange={(val) => setCommunityFilter(val || null)}>
+                  <Select 
+                    value={communityFilter || ''} 
+                    onValueChange={(val: string) => setCommunityFilter(val || null)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Any community" />
                     </SelectTrigger>
@@ -384,7 +393,7 @@ const Issues = () => {
         
         <div className="md:w-1/4">
           {user && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="all">All Issues</TabsTrigger>
                 <TabsTrigger value="mine">My Issues</TabsTrigger>
