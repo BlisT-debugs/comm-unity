@@ -88,7 +88,7 @@ const DashboardContent: React.FC = () => {
                   category={issue.category}
                   community={issue.community_name || 'Community'}
                   communityId={issue.community_id}
-                  status={issue.status}
+                  status={issue.status as 'open' | 'in-progress' | 'completed'}
                   upvotes={issue.upvote_count}
                   comments={0}
                   contributors={0}

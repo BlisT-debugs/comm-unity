@@ -22,13 +22,13 @@ interface AppHeaderProps {
 }
 
 const AppHeader: React.FC<AppHeaderProps> = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
   const isLoggedIn = !!user;
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
       toast.success('Logged out successfully');
       navigate('/');
     } catch (error) {

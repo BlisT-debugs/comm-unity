@@ -7,9 +7,17 @@ import { useCommunities } from '@/hooks/useCommunities';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 
-const CommunitiesTab = () => {
+interface CommunitiesTabProps {
+  limit?: number;
+  showJoined?: boolean;
+}
+
+const CommunitiesTab: React.FC<CommunitiesTabProps> = ({ limit = 6, showJoined = false }) => {
   const navigate = useNavigate();
-  const { communities, isLoading } = useCommunities({ limit: 6 });
+  const { communities, isLoading } = useCommunities({ 
+    limit,
+    joined: showJoined
+  });
 
   return (
     <div className="space-y-4">
@@ -30,7 +38,7 @@ const CommunitiesTab = () => {
               memberCount={community.member_count}
               categories={['Community']}
               imageUrl={community.image_url || undefined}
-              joined={false}
+              joined={showJoined}
             />
           ))}
         </div>

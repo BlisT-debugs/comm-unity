@@ -16,6 +16,9 @@ export interface AuthContextType {
   isLoading: boolean;
   error: any | null;
   logout: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<void>;
+  signOut: () => Promise<void>; // Added signOut as an alias to logout
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -92,8 +95,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in:', error);
+      throw error;
+    }
+  };
+
+  const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
+    try {
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password, 
+        options: {
+          data: metadata
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing up:', error);
+      throw error;
+    }
+  };
+
+  // Provide signOut as an alias to logout for consistency
+  const signOut = logout;
+
   return (
-    <AuthContext.Provider value={{ user, profile, isLoading, error, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      isLoading, 
+      error, 
+      logout, 
+      signIn, 
+      signUp,
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
