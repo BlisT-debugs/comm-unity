@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { User, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface AppHeaderProps {
   // Add any props here if needed
@@ -19,7 +20,10 @@ const AppHeader: React.FC<AppHeaderProps> = () => {
   const handleSignOut = async () => {
     try {
       await logout();
-      toast.success('Logged out successfully');
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);

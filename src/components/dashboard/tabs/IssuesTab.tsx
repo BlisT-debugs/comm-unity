@@ -7,9 +7,13 @@ import { useIssues } from '@/hooks/useIssues';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 
-const IssuesTab = () => {
+interface IssuesTabProps {
+  limit?: number;
+}
+
+const IssuesTab: React.FC<IssuesTabProps> = ({ limit = 6 }) => {
   const navigate = useNavigate();
-  const { issues, isLoading } = useIssues({ limit: 6 });
+  const { issues, isLoading } = useIssues({ limit });
 
   return (
     <div className="space-y-4">
@@ -30,7 +34,7 @@ const IssuesTab = () => {
               category={issue.category}
               community={issue.community_name || 'Community'}
               communityId={issue.community_id}
-              status={issue.status as 'open' | 'in-progress' | 'completed'}
+              status={(issue.status || 'open') as 'open' | 'in-progress' | 'completed'}
               upvotes={issue.upvote_count || 0}
               comments={0}
               contributors={0}

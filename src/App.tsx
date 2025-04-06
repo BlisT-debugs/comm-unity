@@ -11,8 +11,19 @@ import NotFound from "./pages/NotFound";
 import Communities from "./pages/Communities";
 import Issues from "./pages/Issues";
 import Search from "./pages/Search";
+import Settings from "./pages/Settings";
+import Reports from "./pages/Reports";
 
-const queryClient = new QueryClient();
+// Create a query client with optimized settings for better performance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60000, // 1 minute
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -27,6 +38,8 @@ const App = () => (
             <Route path="/communities" element={<Communities />} />
             <Route path="/issues" element={<Issues />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/reports" element={<Reports />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
