@@ -19,7 +19,7 @@ const CommunityCard = lazy(() => import('@/components/community/CommunityCard'))
 const Communities = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'joined'>('all');
+  const [activeTab, setActiveTab] = useState<string>('all'); // Update type to string
   
   // States for community creation dialog
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
@@ -242,7 +242,7 @@ const Communities = () => {
           {user && (
             <Tabs 
               value={activeTab} 
-              onValueChange={(value: 'all' | 'joined') => setActiveTab(value)} 
+              onValueChange={(value: string) => setActiveTab(value)} 
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2">
