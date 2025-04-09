@@ -57,8 +57,10 @@ export const useIssues = (options?: UseIssuesOptions) => {
     
     return data.map(issue => ({
       ...issue,
-      community_name: issue.communities?.name
-    })) || [];
+      community_name: issue.communities?.name,
+      // Ensure status is one of the allowed types
+      status: issue.status as 'open' | 'in-progress' | 'completed'
+    })) as Issue[];
   };
 
   const query = useQuery({

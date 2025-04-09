@@ -53,7 +53,7 @@ export const useJoinCommunity = () => {
         // Update the member count in the communities table
         const { error: updateError } = await supabase.rpc('increment_member_count', {
           community_id: communityId
-        });
+        } as { community_id: string });
 
         if (updateError) {
           console.error('Error updating member count:', updateError);

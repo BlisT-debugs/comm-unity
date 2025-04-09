@@ -74,7 +74,7 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
         // Update member count
         const { error: updateError } = await supabase.rpc('increment_member_count', {
           community_id: data.id
-        });
+        } as { community_id: string });
 
         if (updateError) {
           console.error('Error updating member count:', updateError);
