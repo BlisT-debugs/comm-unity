@@ -44,10 +44,12 @@ export const useJoinCommunity = (onSuccess: () => void) => {
       
       if (memberError) throw memberError;
       
-      // Increment member count
-      await supabase.rpc('increment_community_member_count', { 
+      // Increment member count - Fix the type issue by passing an object with correct typing
+      const { error: incrementError } = await supabase.rpc('increment_community_member_count', { 
         community_id: communityId 
       });
+      
+      if (incrementError) throw incrementError;
       
       toast({
         title: "Joined community",

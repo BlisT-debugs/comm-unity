@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription, 
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from '@/components/ui/dialog';
 
-// Define form schemas
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
@@ -30,17 +38,22 @@ const signupSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Auth = () => {
   const [isShowingPassword, setIsShowingPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
   
-  // If user is already logged in, redirect to home
   if (user) {
     return <Navigate to="/" />;
   }
@@ -60,6 +73,13 @@ const Auth = () => {
       fullName: '',
       email: '',
       password: ''
+    }
+  });
+
+  const resetPasswordForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: ''
     }
   });
 
@@ -92,6 +112,25 @@ const Auth = () => {
     } catch (error: any) {
       console.error('Signup error:', error);
       setAuthError(error.message || 'Failed to create account. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (data: ResetPasswordFormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Password reset link sent to your email');
+      setIsResetPasswordOpen(false);
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      toast.error(error.message || 'Failed to send reset password email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -185,6 +224,56 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
+                    
+                    <div className="flex justify-end">
+                      <Dialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="link" className="px-0 text-sm" type="button">
+                            Forgot password?
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Reset your password</DialogTitle>
+                            <DialogDescription>
+                              Enter your email address and we'll send you a link to reset your password.
+                            </DialogDescription>
+                          </DialogHeader>
+                          
+                          <Form {...resetPasswordForm}>
+                            <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-4 mt-4">
+                              <FormField
+                                control={resetPasswordForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input placeholder="your.email@example.com" className="pl-10" {...field} />
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <div className="flex justify-end gap-2">
+                                <DialogClose asChild>
+                                  <Button variant="outline" type="button">
+                                    Cancel
+                                  </Button>
+                                </DialogClose>
+                                <Button type="submit" disabled={isLoading}>
+                                  {isLoading ? "Sending..." : "Send reset link"}
+                                </Button>
+                              </div>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Logging in..." : "Login"}
