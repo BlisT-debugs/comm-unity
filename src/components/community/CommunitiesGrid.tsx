@@ -1,9 +1,7 @@
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import CommunityCardSkeleton from '@/components/community/CommunityCardSkeleton';
-
-// Lazy load the CommunityCard component
-const CommunityCard = lazy(() => import('@/components/community/CommunityCard'));
+import CommunityCard from '@/components/community/CommunityCard';
 
 interface Community {
   id: string;
@@ -37,24 +35,27 @@ const CommunitiesGrid: React.FC<CommunitiesGridProps> = ({
   }
 
   if (communities.length === 0) {
-    return null;
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground">No communities found</p>
+      </div>
+    );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {communities.map((community) => (
-        <Suspense key={community.id} fallback={<CommunityCardSkeleton />}>
-          <CommunityCard 
-            id={community.id}
-            name={community.name}
-            description={community.description || ''}
-            memberCount={community.member_count}
-            categories={['Community']}
-            imageUrl={community.image_url || undefined}
-            joined={showJoined}
-            onJoin={() => onJoinCommunity(community.id)}
-          />
-        </Suspense>
+        <CommunityCard 
+          key={community.id}
+          id={community.id}
+          name={community.name}
+          description={community.description || ''}
+          memberCount={community.member_count}
+          categories={['Community']}
+          imageUrl={community.image_url || undefined}
+          joined={showJoined}
+          onJoin={() => onJoinCommunity(community.id)}
+        />
       ))}
     </div>
   );

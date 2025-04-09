@@ -8,6 +8,8 @@ import CommunitySearchBar from '@/components/community/CommunitySearchBar';
 import CommunityTabFilter from '@/components/community/CommunityTabFilter';
 import CommunityEmptyState from '@/components/community/CommunityEmptyState';
 import CreateCommunityDialog from '@/components/community/CreateCommunityDialog';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 const Communities = () => {
   const { user } = useAuth();
@@ -22,11 +24,22 @@ const Communities = () => {
   });
   
   const { joinCommunity } = useJoinCommunity(refetch);
+
+  const handleJoinCommunity = (communityId: string) => {
+    joinCommunity(communityId);
+  };
   
   return (
     <div className="container py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Communities</h1>
+        
+        {user && (
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> 
+            Create Community
+          </Button>
+        )}
         
         <CreateCommunityDialog
           isOpen={isCreateDialogOpen}
@@ -58,14 +71,14 @@ const Communities = () => {
           communities={[]} 
           isLoading={true} 
           showJoined={activeTab === 'joined'}
-          onJoinCommunity={joinCommunity}
+          onJoinCommunity={handleJoinCommunity}
         />
       ) : communities.length > 0 ? (
         <CommunitiesGrid 
           communities={communities} 
           isLoading={false} 
           showJoined={activeTab === 'joined'}
-          onJoinCommunity={joinCommunity}
+          onJoinCommunity={handleJoinCommunity}
         />
       ) : (
         <CommunityEmptyState 

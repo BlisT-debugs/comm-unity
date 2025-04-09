@@ -3,6 +3,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Define an interface for the RPC function parameter
+interface IncrementCommunityMemberCountParams {
+  community_id: string;
+}
+
 export const useJoinCommunity = (onSuccess: () => void) => {
   const { user } = useAuth();
 
@@ -44,9 +49,9 @@ export const useJoinCommunity = (onSuccess: () => void) => {
       
       if (memberError) throw memberError;
       
-      // Increment member count - Fix by typing the parameter properly
-      const { error: incrementError } = await supabase.rpc(
-        'increment_community_member_count', 
+      // Increment member count with properly typed parameter
+      const { error: incrementError } = await supabase.rpc<void, IncrementCommunityMemberCountParams>(
+        'increment_community_member_count',
         { community_id: communityId }
       );
       

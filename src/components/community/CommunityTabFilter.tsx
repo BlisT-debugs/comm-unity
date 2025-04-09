@@ -14,7 +14,7 @@ const CommunityTabFilter: React.FC<CommunityTabFilterProps> = ({
   return (
     <Tabs 
       value={activeTab} 
-      onValueChange={setActiveTab} 
+      onValueChange={(value) => setActiveTab(value)} 
       className="w-full"
     >
       <TabsList className="grid w-full grid-cols-2">
