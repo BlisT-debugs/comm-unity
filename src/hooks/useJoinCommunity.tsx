@@ -45,7 +45,9 @@ export const useJoinCommunity = (onSuccess: () => void) => {
       if (memberError) throw memberError;
       
       // Increment member count
-      await supabase.rpc('increment_community_member_count', { community_id: communityId });
+      await supabase.rpc('increment_community_member_count', { 
+        community_id: communityId 
+      });
       
       toast({
         title: "Joined community",
