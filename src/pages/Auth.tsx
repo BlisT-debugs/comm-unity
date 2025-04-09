@@ -54,10 +54,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
   
-  if (user) {
-    return <Navigate to="/" />;
-  }
-
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -82,6 +78,10 @@ const Auth = () => {
       email: ''
     }
   });
+  
+  if (user) {
+    return <Navigate to="/" />;
+  }
 
   const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);

@@ -50,7 +50,7 @@ export const useJoinCommunity = (onSuccess: () => void) => {
       if (memberError) throw memberError;
       
       // Increment member count with properly typed parameter
-      const { error: incrementError } = await supabase.rpc<void, IncrementCommunityMemberCountParams>(
+      const { error: incrementError } = await supabase.rpc<void>(
         'increment_community_member_count',
         { community_id: communityId }
       );
