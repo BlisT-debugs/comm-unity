@@ -16,7 +16,6 @@ interface CommunityCardProps {
   imageUrl?: string;
   joined?: boolean;
   className?: string;
-  onJoin?: (id: string) => void;
 }
 
 const CommunityCard: React.FC<CommunityCardProps> = ({
@@ -28,7 +27,6 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
   imageUrl,
   joined = false,
   className,
-  onJoin
 }) => {
   return (
     <Card className={cn("card-hover overflow-hidden", className)}>
@@ -68,17 +66,11 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
       
       <CardFooter>
         {joined ? (
-          <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link to={`/community/${id}`}>
-              View Community
-            </Link>
+          <Button variant="outline" size="sm" className="w-full">
+            View Community
           </Button>
         ) : (
-          <Button 
-            size="sm" 
-            className="w-full"
-            onClick={onJoin ? () => onJoin(id) : undefined}
-          >
+          <Button size="sm" className="w-full">
             Join Community
           </Button>
         )}
