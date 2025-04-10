@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Create the context
 const AppContext = createContext();
@@ -11,6 +11,12 @@ export const AppProvider = ({ children }) => {
   const [connectionStatus, setConnectionStatus] = useState('online');
   const [enableLowDataMode, setEnableLowDataMode] = useState(false);
   const [location, setLocation] = useState(null);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem('darkMode') === 'true' || false
+  );
+  const [reducedMotion, setReducedMotion] = useState(
+    localStorage.getItem('reducedMotion') === 'true' || false
+  );
   
   // Toggle sidebar function
   const toggleSidebar = () => {
@@ -22,8 +28,46 @@ export const AppProvider = ({ children }) => {
     setEnableLowDataMode(!enableLowDataMode);
   };
   
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode);
+    
+    // Apply dark mode to document
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+  
+  // Toggle reduced motion
+  const toggleReducedMotion = () => {
+    const newReducedMotion = !reducedMotion;
+    setReducedMotion(newReducedMotion);
+    localStorage.setItem('reducedMotion', newReducedMotion);
+    
+    // Apply reduced motion class
+    if (newReducedMotion) {
+      document.documentElement.classList.add('reduce-motion');
+    } else {
+      document.documentElement.classList.remove('reduce-motion');
+    }
+  };
+  
   // Add window resize listener to detect mobile view
-  React.useEffect(() => {
+  useEffect(() => {
+    // Apply initial dark mode setting
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    }
+    
+    // Apply initial reduced motion setting
+    if (reducedMotion) {
+      document.documentElement.classList.add('reduce-motion');
+    }
+    
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
       if (window.innerWidth >= 768) {
@@ -52,7 +96,7 @@ export const AppProvider = ({ children }) => {
       window.removeEventListener('online', () => setConnectionStatus('online'));
       window.removeEventListener('offline', () => setConnectionStatus('offline'));
     };
-  }, []);
+  }, [darkMode, reducedMotion]);
   
   // Context value
   const value = {
@@ -65,6 +109,10 @@ export const AppProvider = ({ children }) => {
     toggleLowDataMode,
     location,
     setLocation,
+    darkMode,
+    toggleDarkMode,
+    reducedMotion,
+    toggleReducedMotion
   };
   
   // Provide the context value to children
