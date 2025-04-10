@@ -18,14 +18,7 @@ import { Button } from '@/components/ui/button';
 const Settings = () => {
   const { user, isLoading } = useAuth();
   const { t } = useLanguage();
-  const { 
-    location, 
-    setLocation, 
-    darkMode, 
-    toggleDarkMode, 
-    reducedMotion, 
-    toggleReducedMotion 
-  } = useApp();
+  const { location, setLocation } = useApp();
 
   return (
     <SidebarProvider>
@@ -101,11 +94,7 @@ const Settings = () => {
                             {t('Enable dark mode for the interface')}
                           </p>
                         </div>
-                        <Switch 
-                          id="dark-mode" 
-                          checked={darkMode}
-                          onCheckedChange={toggleDarkMode}
-                        />
+                        <Switch id="dark-mode" />
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -115,11 +104,7 @@ const Settings = () => {
                             {t('Minimize motion for better accessibility')}
                           </p>
                         </div>
-                        <Switch 
-                          id="reduced-motion" 
-                          checked={reducedMotion}
-                          onCheckedChange={toggleReducedMotion}
-                        />
+                        <Switch id="reduced-motion" />
                       </div>
                     </CardContent>
                   </Card>
