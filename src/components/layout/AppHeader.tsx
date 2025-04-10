@@ -12,9 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useSidebarToggle } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { useMobile } from '@/hooks/use-mobile';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import LanguageSelector from '@/components/settings/LanguageSelector';
 import NetworkIndicator from '@/components/ui/network-indicator';
@@ -23,17 +21,12 @@ import { useApp } from '@/contexts/AppContext';
 
 const AppHeader = () => {
   const { user, profile, signOut } = useAuth();
-  const { isMobile } = useMobile();
-  const { toggleSidebar } = useSidebarToggle();
+  const { isMobile } = useApp();
+  const { toggleSidebar } = useApp();
   const { t } = useLanguage();
   const { connectionStatus } = useApp();
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // Note: This component is imported from the read-only file list, 
-  // I'm aware that this is replacing the existing component.
-  // Since we're allowed to modify the content of AppHeader.tsx, 
-  // this implementation adds new features while maintaining the original functionality
-
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
