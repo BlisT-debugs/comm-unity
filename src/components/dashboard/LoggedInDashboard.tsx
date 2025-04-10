@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart3, PlusCircle, TrendingUp, Trophy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,14 @@ import IssueCard from '@/components/issues/IssueCard';
 import LeaderboardItem from '@/components/gamification/LeaderboardItem';
 import AchievementBadge from '@/components/gamification/AchievementBadge';
 import DashboardCard from '@/components/dashboard/DashboardCard';
+import CreateIssueDialog from '@/components/issues/CreateIssueDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunities } from '@/hooks/useCommunities';
 import { useIssues } from '@/hooks/useIssues';
 import { useUserAchievements } from '@/hooks/useUserAchievements';
 
 const LoggedInDashboard: React.FC = () => {
+  const [createIssueDialogOpen, setCreateIssueDialogOpen] = useState(false);
   const { profile } = useAuth();
   const { communities, isLoading: isCommunitiesLoading } = useCommunities({ limit: 3 });
   const { issues, isLoading: isIssuesLoading } = useIssues({ limit: 4 });
@@ -39,7 +41,7 @@ const LoggedInDashboard: React.FC = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <Button>
+        <Button onClick={() => setCreateIssueDialogOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Create Issue
         </Button>
@@ -223,6 +225,11 @@ const LoggedInDashboard: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <CreateIssueDialog 
+        open={createIssueDialogOpen} 
+        onOpenChange={setCreateIssueDialogOpen} 
+      />
     </div>
   );
 };
