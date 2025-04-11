@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 const GlobalSearch: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const { performSearch, searchResults, isSearching, connectionStatus } = useApp();
+  const { performSearch, searchResults = [], isSearching, connectionStatus } = useApp();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +39,7 @@ const GlobalSearch: React.FC = () => {
   // Handle search when query changes
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (query) {
+      if (query && performSearch) {
         performSearch(query);
       }
     }, 300); // Debounce search
