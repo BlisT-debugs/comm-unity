@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlusCircle, MapPin, Loader2 } from 'lucide-react';
 import {
@@ -32,6 +32,7 @@ import { useForm } from 'react-hook-form';
 import { useApp } from '@/contexts/AppContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useCommunities } from '@/hooks/useCommunities';
 
 // Example issue categories
 const issueCategories = [
@@ -53,6 +54,7 @@ interface IssueFormValues {
   description: string;
   category: string;
   location: string;
+  communityId?: string;
 }
 
 const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({ 
@@ -66,9 +68,10 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
   const { toast } = useToast();
   const { connectionStatus, location, setLocation } = useApp();
   const navigate = useNavigate();
+  const { communities, isLoading: isLoadingCommunities } = useCommunities();
   
   // Update open state when isOpen prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen !== undefined) {
       setOpen(isOpen);
     }
@@ -88,8 +91,16 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
       description: '',
       category: '',
       location: location || '',
+      communityId: communityId || '',
     },
   });
+  
+  // Update form default communityId when prop changes
+  useEffect(() => {
+    if (communityId) {
+      form.setValue('communityId', communityId);
+    }
+  }, [communityId, form]);
   
   // Function to handle form submission
   const onSubmit = async (data: IssueFormValues) => {
@@ -102,7 +113,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
       }
       
       // In a real app, we would send this data to an API
-      console.log('Creating issue:', { ...data, communityId });
+      console.log('Creating issue:', { ...data });
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -240,6 +251,47 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
                 </FormItem>
               )}
             />
+
+            {!communityId && (
+              <FormField
+                control={form.control}
+                name="communityId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Community')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('Select a community (optional)')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">None (General issue)</SelectItem>
+                        {isLoadingCommunities ? (
+                          <SelectItem value="" disabled>
+                            {t('Loading communities...')}
+                          </SelectItem>
+                        ) : communities.length > 0 ? (
+                          communities.map((community) => (
+                            <SelectItem key={community.id} value={community.id}>
+                              {community.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>
+                            {t('No communities available')}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <FormField
               control={form.control}
