@@ -43,6 +43,8 @@ const issueCategories = [
 ];
 
 interface CreateIssueDialogProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   communityId?: string;
 }
 
@@ -53,13 +55,32 @@ interface IssueFormValues {
   location: string;
 }
 
-const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({ communityId }) => {
-  const [open, setOpen] = useState(false);
+const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({ 
+  isOpen, 
+  onOpenChange, 
+  communityId 
+}) => {
+  const [open, setOpen] = useState(isOpen || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { t } = useLanguage();
   const { toast } = useToast();
   const { connectionStatus, location, setLocation } = useApp();
   const navigate = useNavigate();
+  
+  // Update open state when isOpen prop changes
+  React.useEffect(() => {
+    if (isOpen !== undefined) {
+      setOpen(isOpen);
+    }
+  }, [isOpen]);
+
+  // Sync open state changes back to parent
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    }
+  };
   
   const form = useForm<IssueFormValues>({
     defaultValues: {
@@ -93,7 +114,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({ communityId }) =>
       });
       
       // Close the dialog
-      setOpen(false);
+      handleOpenChange(false);
       form.reset();
       
       // In a real app, we would navigate to the new issue
@@ -138,7 +159,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({ communityId }) =>
   };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <PlusCircle size={16} />
