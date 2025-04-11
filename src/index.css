@@ -107,3 +107,14 @@
     @apply bg-gradient-to-br from-socio-blue to-socio-darkgreen;
   }
 }
+
+/* Reduced motion */
+.reduce-motion * {
+  transition-duration: 0.05s !important;
+  animation-duration: 0.05s !important;
+}
+
+.reduce-motion .animate-in,
+.reduce-motion .animate-out {
+  animation-duration: 0.05s !important;
+}
