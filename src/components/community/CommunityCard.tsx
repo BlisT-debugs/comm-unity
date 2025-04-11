@@ -6,6 +6,9 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { useJoinCommunity } from '@/hooks/useJoinCommunity';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface CommunityCardProps {
   id: string;
@@ -28,6 +31,17 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
   joined = false,
   className,
 }) => {
+  const { joinCommunity, isJoining } = useJoinCommunity();
+  const { user } = useAuth();
+  
+  const handleJoinCommunity = () => {
+    if (!user) {
+      toast.error('Please log in to join communities');
+      return;
+    }
+    joinCommunity(id);
+  };
+
   return (
     <Card className={cn("card-hover overflow-hidden", className)}>
       <div 
@@ -66,11 +80,16 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
       
       <CardFooter>
         {joined ? (
-          <Button variant="outline" size="sm" className="w-full">
-            View Community
+          <Button variant="outline" size="sm" className="w-full" asChild>
+            <Link to={`/community/${id}`}>View Community</Link>
           </Button>
         ) : (
-          <Button size="sm" className="w-full">
+          <Button 
+            size="sm" 
+            className="w-full" 
+            onClick={handleJoinCommunity}
+            disabled={isJoining}
+          >
             Join Community
           </Button>
         )}
