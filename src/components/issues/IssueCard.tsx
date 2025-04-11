@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useIssueVote } from '@/hooks/useIssueVote';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface IssueCardProps {
   id: string;
@@ -44,6 +47,21 @@ const IssueCard: React.FC<IssueCardProps> = ({
   createdAt,
   className,
 }) => {
+  const { voteIssue, isVoting } = useIssueVote();
+  const { user } = useAuth();
+  
+  const handleUpvote = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Please log in to upvote issues');
+      return;
+    }
+    
+    voteIssue(id);
+  };
+
   return (
     <Card className={cn("card-hover", className)}>
       <CardHeader className="pb-2">
@@ -90,10 +108,14 @@ const IssueCard: React.FC<IssueCardProps> = ({
       <CardFooter>
         <div className="flex w-full justify-between text-sm">
           <div className="flex items-center gap-3">
-            <div className="flex items-center text-muted-foreground">
+            <button 
+              onClick={handleUpvote}
+              disabled={isVoting}
+              className="flex items-center text-muted-foreground hover:text-primary transition-colors"
+            >
               <ThumbsUp className="mr-1 h-4 w-4" />
               <span>{upvotes}</span>
-            </div>
+            </button>
             <div className="flex items-center text-muted-foreground">
               <MessageSquare className="mr-1 h-4 w-4" />
               <span>{comments}</span>

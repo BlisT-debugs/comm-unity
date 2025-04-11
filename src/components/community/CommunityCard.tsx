@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,13 +33,20 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
 }) => {
   const { joinCommunity, isJoining } = useJoinCommunity();
   const { user } = useAuth();
+  const [isJoined, setIsJoined] = useState(joined);
   
-  const handleJoinCommunity = () => {
+  const handleJoinCommunity = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (!user) {
       toast.error('Please log in to join communities');
       return;
     }
-    joinCommunity(id);
+    
+    joinCommunity(id, {
+      onSuccess: () => {
+        setIsJoined(true);
+      }
+    });
   };
 
   return (
@@ -48,7 +55,7 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
         className="h-32 w-full bg-gradient-to-r from-socio-blue to-socio-darkgreen relative"
         style={imageUrl ? { backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
       >
-        {joined && (
+        {isJoined && (
           <Badge className="absolute top-2 right-2 bg-white/80 text-primary hover:bg-white/90">
             Joined
           </Badge>
@@ -79,7 +86,7 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
       </CardContent>
       
       <CardFooter>
-        {joined ? (
+        {isJoined ? (
           <Button variant="outline" size="sm" className="w-full" asChild>
             <Link to={`/community/${id}`}>View Community</Link>
           </Button>

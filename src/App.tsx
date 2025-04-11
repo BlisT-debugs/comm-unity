@@ -17,6 +17,7 @@ import Discussions from "./pages/Discussions";
 import Ideas from "./pages/Ideas";
 import Achievements from "./pages/Achievements";
 import CommunityDetail from "./pages/CommunityDetail";
+import IssueDetail from "./pages/IssueDetail";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/communities" element={<Communities />} />
                   <Route path="/community/:id" element={<CommunityDetail />} />
                   <Route path="/issues" element={<Issues />} />
+                  <Route path="/issue/:id" element={<IssueDetail />} />
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/discussions" element={<Discussions />} />
                   <Route path="/ideas" element={<Ideas />} />

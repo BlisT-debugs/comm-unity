@@ -18,17 +18,21 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useJoinCommunity } from '@/hooks/useJoinCommunity';
+import { useIssues } from '@/hooks/useIssues';
+import IssueCard from '@/components/issues/IssueCard';
 import { UserPlus, Users, Plus, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import CreateProjectDialog from '@/components/community/CreateProjectDialog';
+import { format } from 'date-fns';
 
 const CommunityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { joinCommunity, isJoining } = useJoinCommunity();
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
   
   // Fetch community details
   const { data: community, isLoading } = useQuery({
@@ -69,9 +73,18 @@ const CommunityDetail = () => {
         console.error('Error checking membership:', error);
       }
       
+      if (data) {
+        setIsJoined(true);
+      }
+      
       return data;
     },
     enabled: !!id && !!user,
+  });
+  
+  // Fetch community issues
+  const { issues, isLoading: isIssuesLoading } = useIssues({
+    communityId: id
   });
   
   // Handle join community
@@ -83,7 +96,11 @@ const CommunityDetail = () => {
     
     if (!id) return;
     
-    joinCommunity(id);
+    joinCommunity(id, {
+      onSuccess: () => {
+        setIsJoined(true);
+      }
+    });
   };
   
   return (
@@ -113,7 +130,7 @@ const CommunityDetail = () => {
                   <div className="flex items-center gap-3">
                     {user && (
                       <>
-                        {membership ? (
+                        {isJoined ? (
                           <Button variant="outline" disabled className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
                             Member
@@ -166,22 +183,43 @@ const CommunityDetail = () => {
                       </TabsList>
                       
                       <TabsContent value="issues">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Community Issues</CardTitle>
-                            <CardDescription>
-                              Issues reported in this community
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-muted-foreground">
-                              No issues have been reported yet.
-                            </p>
-                          </CardContent>
-                          <CardFooter>
-                            <Button>Report an Issue</Button>
-                          </CardFooter>
-                        </Card>
+                        {isIssuesLoading ? (
+                          <div className="space-y-4">
+                            <Skeleton className="h-32 w-full" />
+                            <Skeleton className="h-32 w-full" />
+                          </div>
+                        ) : issues.length > 0 ? (
+                          <div className="space-y-4">
+                            {issues.map(issue => (
+                              <IssueCard
+                                key={issue.id}
+                                id={issue.id}
+                                title={issue.title}
+                                description={issue.description}
+                                category={issue.category}
+                                community={community.name}
+                                communityId={community.id}
+                                status={issue.status}
+                                upvotes={issue.upvote_count}
+                                comments={0}
+                                contributors={0}
+                                progress={issue.status === 'completed' ? 100 : issue.status === 'in-progress' ? 50 : 0}
+                                createdAt={format(new Date(issue.created_at), 'MMM d, yyyy')}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <Card>
+                            <CardContent className="pt-6 pb-4">
+                              <p className="text-muted-foreground">
+                                No issues have been reported yet.
+                              </p>
+                            </CardContent>
+                            <CardFooter>
+                              <Button>Report an Issue</Button>
+                            </CardFooter>
+                          </Card>
+                        )}
                       </TabsContent>
                       
                       <TabsContent value="projects">
@@ -244,9 +282,16 @@ const CommunityDetail = () => {
                         <CardTitle>Community Moderators</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-muted-foreground">
-                          Loading moderators...
-                        </p>
+                        {isMembershipLoading ? (
+                          <div className="space-y-2">
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-2/3" />
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">
+                            Loading moderators...
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
                   </div>

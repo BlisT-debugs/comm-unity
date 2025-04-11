@@ -10,6 +10,10 @@ interface JoinCommunityResult {
   message: string;
 }
 
+interface JoinCommunityOptions {
+  onSuccess?: () => void;
+}
+
 export const useJoinCommunity = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +57,7 @@ export const useJoinCommunity = () => {
         // Update the member count in the communities table
         const { error: updateError } = await supabase.rpc('increment_member_count', {
           community_id: communityId
-        } as { community_id: string });
+        });
 
         if (updateError) {
           console.error('Error updating member count:', updateError);
@@ -71,10 +75,16 @@ export const useJoinCommunity = () => {
         setIsLoading(false);
       }
     },
-    onSuccess: (data) => {
+    onSuccess: (data, _, context) => {
       toast.success(data.message);
       // Invalidate communities queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ['communities'] });
+      queryClient.invalidateQueries({ queryKey: ['community'] });
+
+      // Call the onSuccess callback if provided
+      if ((context as any)?.onSuccess) {
+        (context as any).onSuccess();
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -82,7 +92,11 @@ export const useJoinCommunity = () => {
   });
 
   return {
-    joinCommunity: joinCommunityMutation.mutate,
+    joinCommunity: (communityId: string, options?: JoinCommunityOptions) => {
+      joinCommunityMutation.mutate(communityId, {
+        onSuccess: options?.onSuccess
+      } as any);
+    },
     isJoining: isLoading,
     error: joinCommunityMutation.error
   };
