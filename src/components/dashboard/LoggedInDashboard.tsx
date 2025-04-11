@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart3, PlusCircle, TrendingUp, Trophy, Users } from 'lucide-react';
@@ -227,7 +226,7 @@ const LoggedInDashboard: React.FC = () => {
       </Tabs>
 
       <CreateIssueDialog 
-        open={createIssueDialogOpen} 
+        isOpen={createIssueDialogOpen} 
         onOpenChange={setCreateIssueDialogOpen} 
       />
     </div>

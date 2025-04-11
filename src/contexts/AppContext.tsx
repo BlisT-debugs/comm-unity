@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { performContextualSearch, SearchResult } from '@/utils/searchUtils';
-import { mockCommunities, mockIssues } from '@/services/mockData';
+import { communities, issues } from '@/services/mockData';
 
 export type ConnectionStatus = 'online' | 'offline' | 'reconnecting' | 'low';
 
@@ -93,7 +93,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Simulate API delay
     setTimeout(() => {
       const issueResults = performContextualSearch(
-        mockIssues,
+        issues,
         query,
         {
           textFields: ['title', 'description'],
@@ -103,7 +103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
       
       const communityResults = performContextualSearch(
-        mockCommunities,
+        communities,
         query,
         {
           textFields: ['name', 'description'],
