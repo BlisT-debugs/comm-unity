@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppHeader from '@/components/layout/AppHeader';
@@ -7,13 +8,27 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Award, Star, Trophy, Target, Users, Leaf, BookOpen } from 'lucide-react';
 import { achievements } from '@/services/mockData';
-import { useUserAchievements } from '@/hooks/useUserAchievements';
+import { useUserAchievements, Achievement } from '@/hooks/useUserAchievements';
 
 const Achievements = () => {
   const [tab, setTab] = useState('all');
   const { achievements: userAchievements, isLoading } = useUserAchievements();
   
-  const displayAchievements = userAchievements.length > 0 ? userAchievements : achievements;
+  // Using the mock data if no user achievements are available yet
+  const displayAchievements = userAchievements.length > 0 
+    ? userAchievements 
+    : achievements.map(a => ({
+        ...a,
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        badge_image: '',
+        required_points: 0,
+        achievement_type: a.type,
+        type: a.type as 'bronze' | 'silver' | 'gold' | 'platinum',
+        unlocked: a.unlocked,
+        progress: a.progress
+      }));
   
   const filteredAchievements = tab === 'all' 
     ? displayAchievements
@@ -93,7 +108,7 @@ const Achievements = () => {
                               name={achievement.name}
                               description={achievement.description}
                               type={achievement.type}
-                              unlocked={achievement.unlocked}
+                              unlocked={!!achievement.unlocked}
                               progress={achievement.progress}
                               icon={<Star className="h-6 w-6" />}
                               className="w-16 h-16"
@@ -151,7 +166,7 @@ const Achievements = () => {
                               name={achievement.name}
                               description={achievement.description}
                               type={achievement.type}
-                              unlocked={achievement.unlocked}
+                              unlocked={!!achievement.unlocked}
                               progress={achievement.progress}
                               icon={<Leaf className="h-6 w-6" />}
                               className="w-16 h-16"
@@ -180,7 +195,7 @@ const Achievements = () => {
                               name={achievement.name}
                               description={achievement.description}
                               type={achievement.type}
-                              unlocked={achievement.unlocked}
+                              unlocked={!!achievement.unlocked}
                               progress={achievement.progress}
                               icon={<Trophy className="h-6 w-6" />}
                               className="w-16 h-16"
@@ -209,7 +224,7 @@ const Achievements = () => {
                               name={achievement.name}
                               description={achievement.description}
                               type={achievement.type}
-                              unlocked={achievement.unlocked}
+                              unlocked={!!achievement.unlocked}
                               progress={achievement.progress}
                               icon={<Target className="h-6 w-6" />}
                               className="w-16 h-16"
@@ -238,7 +253,7 @@ const Achievements = () => {
                               name={achievement.name}
                               description={achievement.description}
                               type={achievement.type}
-                              unlocked={achievement.unlocked}
+                              unlocked={!!achievement.unlocked}
                               progress={achievement.progress}
                               icon={<BookOpen className="h-6 w-6" />}
                               className="w-16 h-16"
