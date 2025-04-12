@@ -23,7 +23,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   // Initialize socket connection when the component mounts and user is authenticated
   useEffect(() => {
@@ -36,11 +36,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
+    // Get the display name for the user
+    const displayName = profile?.username || user.email || user.id.substring(0, 8);
+
     // Create new socket connection
     const newSocket = io(SOCKET_URL, {
       auth: {
         userId: user.id,
-        username: user.username || user.email
+        username: displayName
       },
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -77,7 +80,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         newSocket.disconnect();
       }
     };
-  }, [user]);
+  }, [user, profile]);
 
   // Function to join a room (e.g., for community or issue discussions)
   const joinRoom = (roomId: string) => {
@@ -99,11 +102,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const sendMessage = (roomId: string, message: string) => {
     if (!socket || !isConnected || !user) return;
     
+    const displayName = profile?.username || user.email || user.id.substring(0, 8);
+    
     const messageData = {
       roomId,
       message,
       userId: user.id,
-      username: user.username || user.email,
+      username: displayName,
       timestamp: new Date().toISOString()
     };
     

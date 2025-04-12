@@ -29,7 +29,7 @@ interface ChatInterfaceProps {
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomType }) => {
   const { socket, isConnected, onlineUsers, joinRoom, leaveRoom, sendMessage } = useSocket();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [showUsers, setShowUsers] = useState(false);
@@ -81,18 +81,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!message.trim() || !isConnected) return;
+    if (!message.trim() || !isConnected || !user) return;
     
     // Send the message
     sendMessage(roomId, message);
+    
+    // Get display name
+    const displayName = profile?.username || user.email || user.id.substring(0, 8);
     
     // Add message to local state (optimistic update)
     const newMessage: Message = {
       id: Date.now().toString(),
       roomId,
       message,
-      userId: user!.id,
-      username: user!.username || user!.email,
+      userId: user.id,
+      username: displayName,
       timestamp: new Date().toISOString()
     };
     
@@ -102,6 +105,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
   
   const formatMessageTime = (timestamp: string) => {
     return format(new Date(timestamp), 'h:mm a');
+  };
+  
+  // Helper function to get the first character of a name safely
+  const getAvatarFallback = (name: string): string => {
+    return name && name.length > 0 ? name[0].toUpperCase() : '?';
   };
   
   return (
@@ -156,7 +164,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
                   >
                     {msg.userId !== user?.id && (
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback>{msg.username[0].toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getAvatarFallback(msg.username)}</AvatarFallback>
                       </Avatar>
                     )}
                     <div className={`max-w-[70%] ${msg.userId === user?.id ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-3`}>
