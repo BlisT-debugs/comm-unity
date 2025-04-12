@@ -9,8 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Send, Users, UserCheck } from 'lucide-react';
+import { Send, Users, UserCheck, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Message {
   id: string;
@@ -28,24 +29,26 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomType }) => {
-  const { socket, isConnected, onlineUsers, joinRoom, leaveRoom, sendMessage } = useSocket();
+  const { socket, isConnected, onlineUsers, joinRoom, leaveRoom, sendMessage, reconnect } = useSocket();
   const { user, profile } = useAuth();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [showUsers, setShowUsers] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Join the room when component mounts
   useEffect(() => {
     if (isConnected) {
       joinRoom(roomId);
+      console.log('Loading messages for room:', roomId);
     }
     
     // Cleanup when component unmounts
     return () => {
       leaveRoom(roomId);
     };
-  }, [isConnected, roomId]);
+  }, [isConnected, roomId, joinRoom, leaveRoom]);
   
   // Listen for incoming messages
   useEffect(() => {
@@ -61,8 +64,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
     
     // Load previous messages (this would come from your database)
     const loadMessages = async () => {
+      setIsLoading(true);
       // This is a placeholder - in a real app you would fetch from API/DB
       console.log('Loading messages for room:', roomId);
+      setIsLoading(false);
       // setMessages([...historical messages would go here]);
     };
     
@@ -102,6 +107,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setMessage('');
   };
+
+  const handleReconnect = () => {
+    reconnect();
+  };
   
   const formatMessageTime = (timestamp: string) => {
     return format(new Date(timestamp), 'h:mm a');
@@ -130,29 +139,50 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
               )}
             </p>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowUsers(!showUsers)}
-            className="relative"
-          >
-            <Users className="h-5 w-5" />
-            {onlineUsers.length > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">
-                {onlineUsers.length}
-              </Badge>
+          <div className="flex gap-2">
+            {!isConnected && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleReconnect}
+                className="flex items-center gap-1"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reconnect
+              </Button>
             )}
-          </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowUsers(!showUsers)}
+              className="relative"
+            >
+              <Users className="h-5 w-5" />
+              {onlineUsers.length > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">
+                  {onlineUsers.length}
+                </Badge>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-grow relative">
           <ScrollArea className="h-[380px] p-4">
+            {!isConnected && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>
+                  You are currently disconnected from the chat server. Messages won't be sent until you're reconnected.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
                 <p className="text-muted-foreground">
-                  No messages yet. Be the first to send a message!
+                  {isLoading ? "Loading messages..." : "No messages yet. Be the first to send a message!"}
                 </p>
               </div>
             ) : (
@@ -217,7 +247,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ roomId, roomName, roomTyp
             disabled={!isConnected || !user}
             className="flex-1"
           />
-          <Button type="submit" disabled={!isConnected || !user || !message.trim()}>
+          <Button 
+            type="submit" 
+            disabled={!isConnected || !user || !message.trim()}
+            title={!isConnected ? "Reconnect to send messages" : "Send message"}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>

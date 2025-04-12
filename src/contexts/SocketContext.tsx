@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ interface SocketContextType {
   joinRoom: (roomId: string) => void;
   leaveRoom: (roomId: string) => void;
   sendMessage: (roomId: string, message: string) => void;
+  reconnect: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -23,7 +24,42 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [reconnectAttempts, setReconnectAttempts] = useState<number>(0);
   const { user, profile } = useAuth();
+
+  // Function to initialize socket connection
+  const initializeSocket = useCallback(() => {
+    if (!user) return null;
+
+    // Get the display name for the user
+    const displayName = profile?.username || user.email || user.id.substring(0, 8);
+
+    // Create new socket connection with more robust options
+    return io(SOCKET_URL, {
+      auth: {
+        userId: user.id,
+        username: displayName
+      },
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
+      transports: ['websocket', 'polling'] // Try WebSocket first, fall back to polling
+    });
+  }, [user, profile]);
+
+  // Manual reconnect function that users can trigger
+  const reconnect = useCallback(() => {
+    if (socket) {
+      socket.disconnect();
+    }
+    
+    const newSocket = initializeSocket();
+    if (newSocket) {
+      setSocket(newSocket);
+      setReconnectAttempts(0);
+      toast.info('Attempting to reconnect to chat server...');
+    }
+  }, [socket, initializeSocket]);
 
   // Initialize socket connection when the component mounts and user is authenticated
   useEffect(() => {
@@ -36,22 +72,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // Get the display name for the user
-    const displayName = profile?.username || user.email || user.id.substring(0, 8);
-
-    // Create new socket connection
-    const newSocket = io(SOCKET_URL, {
-      auth: {
-        userId: user.id,
-        username: displayName
-      },
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
+    const newSocket = initializeSocket();
+    if (!newSocket) return;
 
     // Set up event listeners
     newSocket.on('connect', () => {
       setIsConnected(true);
+      setReconnectAttempts(0);
       toast.success('Connected to chat server');
       console.log('Socket connected:', newSocket.id);
     });
@@ -64,7 +91,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect_error', (err) => {
       console.error('Connection error:', err);
-      toast.error(`Connection error: ${err.message}`);
+      
+      // Only show one error toast per session until reconnected
+      if (reconnectAttempts === 0) {
+        toast.error(`Connection error: ${err.message}`, {
+          description: "Chat functionality may be limited. Try refreshing the page or check your internet connection."
+        });
+      }
+      
+      setReconnectAttempts(prev => prev + 1);
     });
 
     newSocket.on('users_online', (users) => {
@@ -80,7 +115,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         newSocket.disconnect();
       }
     };
-  }, [user, profile]);
+  }, [user, profile, initializeSocket, reconnectAttempts]);
 
   // Function to join a room (e.g., for community or issue discussions)
   const joinRoom = (roomId: string) => {
@@ -123,7 +158,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         onlineUsers,
         joinRoom,
         leaveRoom,
-        sendMessage
+        sendMessage,
+        reconnect
       }}
     >
       {children}
