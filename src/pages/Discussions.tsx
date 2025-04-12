@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Message, Users, Filter, Plus } from 'lucide-react';
+import { Users, Filter, Plus, MessageSquare } from 'lucide-react';
 import ChatInterface from '@/components/chat/ChatInterface';
 
 const Discussions = () => {
@@ -55,7 +55,7 @@ const Discussions = () => {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Message className="h-5 w-5" />
+                      <MessageSquare className="h-5 w-5" />
                       {t('Chat Rooms')}
                     </CardTitle>
                     <CardDescription>

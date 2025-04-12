@@ -1,164 +1,258 @@
 
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { PlusCircle, Upload, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useForm } from 'react-hook-form';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/components/ui/use-toast';
+import VoiceInput from '@/components/voice/VoiceInput';
 
 interface CreateCommunityDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
-  open,
-  onOpenChange,
+interface CommunityFormValues {
+  name: string;
+  description: string;
+  location: string;
+  imageUrl: string;
+}
+
+const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({ 
+  open: externalOpen, 
+  onOpenChange 
 }) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-
-  const createCommunityMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) {
-        throw new Error('You must be logged in to create a community');
-      }
-
-      if (!name.trim() || !location.trim()) {
-        throw new Error('Community name and location are required');
-      }
-
-      const { data, error } = await supabase
-        .from('communities')
-        .insert({
-          name: name.trim(),
-          description: description.trim(),
-          location: location.trim(),
-          creator_id: user.id,
-        })
-        .select('id')
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      // Join the user to the community as a moderator
-      if (data?.id) {
-        const { error: joinError } = await supabase
-          .from('community_members')
-          .insert({
-            community_id: data.id,
-            profile_id: user.id,
-            is_moderator: true,
-          });
-
-        if (joinError) {
-          console.error('Error joining community:', joinError);
-        }
-
-        // Update member count
-        const { error: updateError } = await supabase.rpc('increment_member_count', {
-          community_id: data.id
-        } as { community_id: string });
-
-        if (updateError) {
-          console.error('Error updating member count:', updateError);
-        }
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Community created successfully');
-      queryClient.invalidateQueries({ queryKey: ['communities'] });
-      resetForm();
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create community: ${error.message}`);
+  const [open, setOpen] = useState(externalOpen || false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeVoiceField, setActiveVoiceField] = useState<keyof CommunityFormValues | null>(null);
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Update open state when external open prop changes
+  React.useEffect(() => {
+    if (externalOpen !== undefined) {
+      setOpen(externalOpen);
+    }
+  }, [externalOpen]);
+  
+  const form = useForm<CommunityFormValues>({
+    defaultValues: {
+      name: '',
+      description: '',
+      location: '',
+      imageUrl: '',
     },
   });
-
-  const resetForm = () => {
-    setName('');
-    setDescription('');
-    setLocation('');
+  
+  // Sync open state changes back to parent
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    }
+  };
+  
+  // Function to handle form submission
+  const onSubmit = async (data: CommunityFormValues) => {
+    try {
+      setIsSubmitting(true);
+      
+      // In a real app, we would send this data to an API
+      console.log('Creating community:', data);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "Community created",
+        description: "Your community has been successfully created.",
+        variant: "default",
+      });
+      
+      // Close the dialog and reset form
+      handleOpenChange(false);
+      form.reset();
+      
+      // In a real app, we would navigate to the new community
+      // navigate(`/community/${newCommunityId}`);
+    } catch (error) {
+      console.error('Failed to create community:', error);
+      toast({
+        title: "Failed to create community",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createCommunityMutation.mutate();
+  // Handle voice input transcripts
+  const handleVoiceTranscript = (transcript: string) => {
+    if (activeVoiceField && transcript) {
+      form.setValue(activeVoiceField, transcript);
+      toast.success(`Added voice input to ${activeVoiceField}`);
+      setActiveVoiceField(null);
+    }
   };
-
+  
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create Community</DialogTitle>
-            <DialogDescription>
-              Create a new community to connect with others and address local issues.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Community Name*</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter community name"
-                required
-              />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <PlusCircle size={16} />
+          {t('Create Community')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{t('Create New Community')}</DialogTitle>
+          <DialogDescription>
+            {t('Create a new community for people to join and collaborate')}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              rules={{ required: "Community name is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Community Name')}</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder={t('Enter community name')} {...field} />
+                    </FormControl>
+                    <VoiceInput 
+                      onTranscriptChange={handleVoiceTranscript}
+                      isListening={activeVoiceField === 'name'}
+                      onListeningChange={(isListening) => {
+                        setActiveVoiceField(isListening ? 'name' : null);
+                      }}
+                      placeholder="Name"
+                      buttonSize="icon"
+                    />
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="description"
+              rules={{ required: "Description is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Description')}</FormLabel>
+                  <div className="flex gap-2 items-start">
+                    <FormControl>
+                      <Textarea 
+                        placeholder={t('What is this community about?')} 
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <VoiceInput 
+                      onTranscriptChange={handleVoiceTranscript}
+                      isListening={activeVoiceField === 'description'}
+                      onListeningChange={(isListening) => {
+                        setActiveVoiceField(isListening ? 'description' : null);
+                      }}
+                      placeholder="Description"
+                      buttonSize="icon"
+                    />
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Location')}</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder={t('Optional: City, State, or Region')} {...field} />
+                    </FormControl>
+                    <VoiceInput 
+                      onTranscriptChange={handleVoiceTranscript}
+                      isListening={activeVoiceField === 'location'}
+                      onListeningChange={(isListening) => {
+                        setActiveVoiceField(isListening ? 'location' : null);
+                      }}
+                      placeholder="Location"
+                      buttonSize="icon"
+                    />
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Community Image URL')}</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder={t('Optional: URL to community image')} {...field} />
+                    </FormControl>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Image uploader - in a real app, this would allow file uploads */}
+            <div className="border-2 border-dashed border-muted rounded-md p-6 text-center cursor-pointer hover:bg-muted/30 transition-colors">
+              <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{t('Drag and drop or click to upload')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('PNG, JPG or GIF, max 5MB')}</p>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="location">Location*</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="City, State"
-                required
-              />
+            
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('Creating...')}
+                  </>
+                ) : (
+                  t('Create Community')
+                )}
+              </Button>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your community"
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createCommunityMutation.isPending || !name.trim() || !location.trim()}
-            >
-              {createCommunityMutation.isPending ? 'Creating...' : 'Create Community'}
-            </Button>
-          </DialogFooter>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

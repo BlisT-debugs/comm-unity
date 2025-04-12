@@ -33,6 +33,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useCommunities } from '@/hooks/useCommunities';
+import VoiceInput from '@/components/voice/VoiceInput';
 
 // Example issue categories
 const issueCategories = [
@@ -64,6 +65,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
 }) => {
   const [open, setOpen] = useState(isOpen || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeVoiceField, setActiveVoiceField] = useState<keyof IssueFormValues | null>(null);
   const { t } = useLanguage();
   const { toast } = useToast();
   const { connectionStatus, location, setLocation } = useApp();
@@ -168,6 +170,15 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
       });
     }
   };
+
+  // Handle voice input transcripts
+  const handleVoiceTranscript = (transcript: string) => {
+    if (activeVoiceField && transcript) {
+      form.setValue(activeVoiceField, transcript);
+      toast.success(`Added voice input to ${activeVoiceField}`);
+      setActiveVoiceField(null);
+    }
+  };
   
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -196,9 +207,20 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('Issue Title')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('Enter a descriptive title')} {...field} />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder={t('Enter a descriptive title')} {...field} />
+                    </FormControl>
+                    <VoiceInput 
+                      onTranscriptChange={handleVoiceTranscript}
+                      isListening={activeVoiceField === 'title'}
+                      onListeningChange={(isListening) => {
+                        setActiveVoiceField(isListening ? 'title' : null);
+                      }}
+                      placeholder="Title"
+                      buttonSize="icon"
+                    />
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -211,13 +233,24 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('Description')}</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder={t('Provide details about the issue')}
-                      className="min-h-[100px]" 
-                      {...field} 
+                  <div className="flex gap-2 items-start">
+                    <FormControl>
+                      <Textarea 
+                        placeholder={t('Provide details about the issue')}
+                        className="min-h-[100px]" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <VoiceInput 
+                      onTranscriptChange={handleVoiceTranscript}
+                      isListening={activeVoiceField === 'description'}
+                      onListeningChange={(isListening) => {
+                        setActiveVoiceField(isListening ? 'description' : null);
+                      }}
+                      placeholder="Description"
+                      buttonSize="icon"
                     />
-                  </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -312,6 +345,15 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
                     >
                       <MapPin className="h-4 w-4" />
                     </Button>
+                    <VoiceInput 
+                      onTranscriptChange={handleVoiceTranscript}
+                      isListening={activeVoiceField === 'location'}
+                      onListeningChange={(isListening) => {
+                        setActiveVoiceField(isListening ? 'location' : null);
+                      }}
+                      placeholder="Location"
+                      buttonSize="icon"
+                    />
                   </div>
                   <FormMessage />
                 </FormItem>
