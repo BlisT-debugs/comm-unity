@@ -4,6 +4,7 @@ import { performContextualSearch, SearchResult } from '@/utils/searchUtils';
 import { communities, issues } from '@/services/mockData';
 
 export type ConnectionStatus = 'online' | 'offline' | 'reconnecting' | 'low';
+export type ThemeType = 'light' | 'dark' | 'system';
 
 export interface AppContextType {
   isSidebarOpen: boolean;
@@ -11,8 +12,9 @@ export interface AppContextType {
   setSidebarOpen: (open: boolean) => void;
   connectionStatus: ConnectionStatus;
   isMobile: boolean;
-  theme: 'light' | 'dark';
-  setTheme: (theme: 'light' | 'dark') => void;
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
+  resolvedTheme: 'light' | 'dark';
   reduceMotion: boolean;
   setReduceMotion: (reduce: boolean) => void;
   enableLowDataMode: boolean;
@@ -32,8 +34,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('online');
   const [isMobile, setIsMobile] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    // Get from localStorage or default to 'system'
+    const savedTheme = localStorage.getItem('theme');
+    return (savedTheme as ThemeType) || 'system';
+  });
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
+    document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+  );
+  const [reduceMotion, setReduceMotion] = useState(() => {
+    const savedMotion = localStorage.getItem('reduceMotion');
+    return savedMotion ? JSON.parse(savedMotion) : false;
+  });
   const [enableLowDataMode, setEnableLowDataMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -66,13 +78,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  // Apply theme and motion preferences
+  // Handle system theme preference changes
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = () => {
+      if (theme === 'system') {
+        const newTheme = mediaQuery.matches ? 'dark' : 'light';
+        setResolvedTheme(newTheme);
+        updateThemeClass(newTheme);
+      }
+    };
+    
+    // Initial check
+    handleChange();
+    
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
+
+  // Apply theme and motion preferences when they change
+  useEffect(() => {
+    const newResolvedTheme = theme === 'system'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      : theme;
+    
+    setResolvedTheme(newResolvedTheme);
+    updateThemeClass(newResolvedTheme);
+    localStorage.setItem('theme', theme);
+    
+    localStorage.setItem('reduceMotion', JSON.stringify(reduceMotion));
     
     if (reduceMotion) {
       document.documentElement.classList.add('reduce-motion');
@@ -80,6 +116,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       document.documentElement.classList.remove('reduce-motion');
     }
   }, [theme, reduceMotion]);
+
+  const updateThemeClass = (newTheme: 'light' | 'dark') => {
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   
@@ -125,6 +169,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isMobile,
     theme,
     setTheme,
+    resolvedTheme,
     reduceMotion,
     setReduceMotion,
     enableLowDataMode,
