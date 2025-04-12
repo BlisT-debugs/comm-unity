@@ -36,8 +36,19 @@ export const useIssueVote = () => {
           if (deleteError) throw deleteError;
 
           // Decrement the upvote count
+          // Update the issue directly instead of using RPC
+          const { data: issue, error: fetchError } = await supabase
+            .from('issues')
+            .select('upvote_count')
+            .eq('id', issueId)
+            .single();
+            
+          if (fetchError) throw fetchError;
+          
           const { error: updateError } = await supabase
-            .rpc('decrement_upvote_count', { issue_id: issueId });
+            .from('issues')
+            .update({ upvote_count: Math.max(0, (issue?.upvote_count || 1) - 1) })
+            .eq('id', issueId);
 
           if (updateError) throw updateError;
 
@@ -54,8 +65,19 @@ export const useIssueVote = () => {
           if (insertError) throw insertError;
 
           // Increment the upvote count
+          // Update the issue directly instead of using RPC
+          const { data: issue, error: fetchError } = await supabase
+            .from('issues')
+            .select('upvote_count')
+            .eq('id', issueId)
+            .single();
+            
+          if (fetchError) throw fetchError;
+          
           const { error: updateError } = await supabase
-            .rpc('increment_upvote_count', { issue_id: issueId });
+            .from('issues')
+            .update({ upvote_count: (issue?.upvote_count || 0) + 1 })
+            .eq('id', issueId);
 
           if (updateError) throw updateError;
 

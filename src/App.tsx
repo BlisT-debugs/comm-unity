@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AppProvider } from "@/contexts/AppContext";
+import { SocketProvider } from "@/contexts/SocketContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -32,26 +33,28 @@ function App() {
         <AuthProvider>
           <LanguageProvider>
             <AppProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/communities" element={<Communities />} />
-                  <Route path="/community/:id" element={<CommunityDetail />} />
-                  <Route path="/issues" element={<Issues />} />
-                  <Route path="/issue/:id" element={<IssueDetail />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/discussions" element={<Discussions />} />
-                  <Route path="/ideas" element={<Ideas />} />
-                  <Route path="/achievements" element={<Achievements />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <Toaster />
-                <Sonner />
-              </BrowserRouter>
+              <SocketProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/communities" element={<Communities />} />
+                    <Route path="/community/:id" element={<CommunityDetail />} />
+                    <Route path="/issues" element={<Issues />} />
+                    <Route path="/issue/:id" element={<IssueDetail />} />
+                    <Route path="/projects" element={<Projects />} />
+                    <Route path="/discussions" element={<Discussions />} />
+                    <Route path="/ideas" element={<Ideas />} />
+                    <Route path="/achievements" element={<Achievements />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <Toaster />
+                  <Sonner />
+                </BrowserRouter>
+              </SocketProvider>
             </AppProvider>
           </LanguageProvider>
         </AuthProvider>
