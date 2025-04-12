@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import VoiceInput from '@/components/voice/VoiceInput';
 
 interface CreateCommunityDialogProps {
@@ -46,7 +47,7 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeVoiceField, setActiveVoiceField] = useState<keyof CommunityFormValues | null>(null);
   const { t } = useLanguage();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
   
   // Update open state when external open prop changes
@@ -84,7 +85,7 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      toast({
+      uiToast({
         title: "Community created",
         description: "Your community has been successfully created.",
         variant: "default",
@@ -98,7 +99,7 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
       // navigate(`/community/${newCommunityId}`);
     } catch (error) {
       console.error('Failed to create community:', error);
-      toast({
+      uiToast({
         title: "Failed to create community",
         description: "Please try again later.",
         variant: "destructive",

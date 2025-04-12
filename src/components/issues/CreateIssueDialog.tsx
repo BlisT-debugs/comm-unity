@@ -32,6 +32,7 @@ import { useForm } from 'react-hook-form';
 import { useApp } from '@/contexts/AppContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { useCommunities } from '@/hooks/useCommunities';
 import VoiceInput from '@/components/voice/VoiceInput';
 
@@ -67,7 +68,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeVoiceField, setActiveVoiceField] = useState<keyof IssueFormValues | null>(null);
   const { t } = useLanguage();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const { connectionStatus, location, setLocation } = useApp();
   const navigate = useNavigate();
   const { communities, isLoading: isLoadingCommunities } = useCommunities();
@@ -120,7 +121,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      toast({
+      uiToast({
         title: "Issue created",
         description: "Your issue has been successfully submitted.",
         variant: "default",
@@ -134,7 +135,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
       // navigate(`/issue/${newIssueId}`);
     } catch (error) {
       console.error('Failed to create issue:', error);
-      toast({
+      uiToast({
         title: "Failed to create issue",
         description: "Please try again later.",
         variant: "destructive",
@@ -155,7 +156,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
         },
         (error) => {
           console.error('Geolocation error:', error);
-          toast({
+          uiToast({
             title: "Location unavailable",
             description: "Please enter your location manually.",
             variant: "destructive",
@@ -163,7 +164,7 @@ const CreateIssueDialog: React.FC<CreateIssueDialogProps> = ({
         }
       );
     } else {
-      toast({
+      uiToast({
         title: "Geolocation not supported",
         description: "Your browser doesn't support geolocation.",
         variant: "destructive",
