@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppHeader from '@/components/layout/AppHeader';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -8,14 +8,41 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Lightbulb, ThumbsUp, MessageSquare, Filter, Plus, Zap } from 'lucide-react';
+import { Lightbulb, ThumbsUp, MessageSquare, Filter, Plus, Zap, Loader2, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import VoiceInput from '@/components/voice/VoiceInput';
+
+interface IdeaFormValues {
+  title: string;
+  description: string;
+  category: string;
+}
 
 const Ideas = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeVoiceField, setActiveVoiceField] = useState<keyof IdeaFormValues | null>(null);
+  
+  const form = useForm<IdeaFormValues>({
+    defaultValues: {
+      title: '',
+      description: '',
+      category: '',
+    }
+  });
   
   // Mock idea data
-  const ideas = [
+  const [ideas, setIdeas] = useState([
     {
       id: 1,
       title: 'Community resource sharing platform',
@@ -64,7 +91,7 @@ const Ideas = () => {
       status: 'new',
       createdAt: '2023-05-03'
     }
-  ];
+  ]);
   
   // Color mapping for status badges
   const getStatusColor = (status: string) => {
@@ -76,6 +103,56 @@ const Ideas = () => {
       case 'completed': return 'bg-teal-500/10 text-teal-500 hover:bg-teal-500/20';
       case 'archived': return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
       default: return '';
+    }
+  };
+
+  // Handle voice input transcripts
+  const handleVoiceTranscript = (transcript: string) => {
+    if (activeVoiceField && transcript) {
+      form.setValue(activeVoiceField, transcript);
+      toast.success(`Added voice input to ${activeVoiceField}`);
+      setActiveVoiceField(null);
+    }
+  };
+
+  // Submit a new idea
+  const onSubmit = async (data: IdeaFormValues) => {
+    try {
+      setIsSubmitting(true);
+      
+      // In a real app, you would send this data to an API
+      console.log('Submitting idea:', data);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Add idea to local state (in a real app, this would come from the API response)
+      const newIdea = {
+        id: ideas.length + 1,
+        title: data.title,
+        description: data.description,
+        author: user?.email || 'Anonymous',
+        authorAvatar: user?.user_metadata?.avatar_url || '',
+        votes: 0,
+        comments: 0,
+        category: data.category || 'general',
+        status: 'new',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      setIdeas([newIdea, ...ideas]);
+      toast.success('Idea submitted successfully');
+      
+      // Close dialog and reset form
+      setShowCreateDialog(false);
+      form.reset();
+    } catch (error) {
+      console.error('Error submitting idea:', error);
+      toast.error('Failed to submit idea', {
+        description: 'Please try again later'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -102,7 +179,11 @@ const Ideas = () => {
                   <Filter className="mr-2 h-4 w-4" />
                   {t('Filter')}
                 </Button>
-                <Button variant="default" size="sm">
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowCreateDialog(true)}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   {t('Submit Idea')}
                 </Button>
@@ -178,6 +259,133 @@ const Ideas = () => {
           </main>
         </div>
       </div>
+
+      {/* Create Idea Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('Submit New Idea')}</DialogTitle>
+            <DialogDescription>
+              {t('Share your idea with the community. Be clear and concise.')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                rules={{ required: "Title is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Idea Title')}</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input placeholder={t('Enter a descriptive title')} {...field} />
+                      </FormControl>
+                      <VoiceInput 
+                        onTranscriptChange={handleVoiceTranscript}
+                        isListening={activeVoiceField === 'title'}
+                        onListeningChange={(isListening) => {
+                          setActiveVoiceField(isListening ? 'title' : null);
+                        }}
+                        placeholder="Title"
+                        buttonSize="icon"
+                      />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                rules={{ required: "Description is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Description')}</FormLabel>
+                    <div className="flex gap-2 items-start">
+                      <FormControl>
+                        <Textarea 
+                          placeholder={t('Describe your idea in detail...')} 
+                          className="min-h-[120px]" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <VoiceInput 
+                        onTranscriptChange={handleVoiceTranscript}
+                        isListening={activeVoiceField === 'description'}
+                        onListeningChange={(isListening) => {
+                          setActiveVoiceField(isListening ? 'description' : null);
+                        }}
+                        placeholder="Description"
+                        buttonSize="icon"
+                      />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Category')}</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('Select a category')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="community">Community</SelectItem>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="environment">Environment</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="health">Health & Wellness</SelectItem>
+                        <SelectItem value="culture">Arts & Culture</SelectItem>
+                        <SelectItem value="business">Business & Economy</SelectItem>
+                        <SelectItem value="general">General</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => setShowCreateDialog(false)}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  {t('Cancel')}
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('Submitting...')}
+                    </>
+                  ) : (
+                    <>
+                      <Lightbulb className="mr-2 h-4 w-4" />
+                      {t('Submit Idea')}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

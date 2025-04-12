@@ -55,11 +55,16 @@ interface SpeechRecognition extends EventTarget {
   abort(): void;
 }
 
+// Define the Speech Recognition constructor
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
 // Add to Window interface
 declare global {
   interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
   }
 }
 
@@ -179,7 +184,11 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         recognitionRef.current.onend = null;
         
         if (isListening) {
-          recognitionRef.current.stop();
+          try {
+            recognitionRef.current.stop();
+          } catch (error) {
+            console.error('Error stopping recognition:', error);
+          }
         }
       }
     };
@@ -195,7 +204,11 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
     
     if (isListening) {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (error) {
+          console.error('Error stopping recognition:', error);
+        }
       }
       setIsListening(false);
       if (onListeningChange) onListeningChange(false);
@@ -207,10 +220,17 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
         await navigator.mediaDevices.getUserMedia({ audio: true });
         
         if (recognitionRef.current) {
-          recognitionRef.current.start();
-          setIsListening(true);
-          if (onListeningChange) onListeningChange(true);
-          toast.info(placeholder ? `Listening for ${placeholder.toLowerCase()}...` : 'Listening...');
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+            if (onListeningChange) onListeningChange(true);
+            toast.success(placeholder ? `Listening for ${placeholder.toLowerCase()}...` : 'Listening...');
+          } catch (error) {
+            console.error('Error starting recognition:', error);
+            toast.error('Failed to start voice recognition', {
+              description: 'Please try again or use text input instead'
+            });
+          }
         }
       } catch (error) {
         console.error('Error accessing microphone:', error);

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Upload, Loader2 } from 'lucide-react';
+import { PlusCircle, Upload, Loader2, MapPin } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,7 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
   const [open, setOpen] = useState(externalOpen || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeVoiceField, setActiveVoiceField] = useState<keyof CommunityFormValues | null>(null);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const { t } = useLanguage();
   const { toast: uiToast } = useToast();
   const navigate = useNavigate();
@@ -115,6 +116,82 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
       form.setValue(activeVoiceField, transcript);
       toast.success(`Added voice input to ${activeVoiceField}`);
       setActiveVoiceField(null);
+    }
+  };
+
+  // Get current location
+  const detectLocation = async () => {
+    try {
+      setIsDetectingLocation(true);
+      
+      if (!navigator.geolocation) {
+        toast.error('Geolocation is not supported by your browser');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            // Use reverse geocoding to get address from coordinates
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+              { headers: { 'Accept-Language': 'en' } }
+            );
+            
+            if (!response.ok) {
+              throw new Error('Failed to fetch location data');
+            }
+            
+            const data = await response.json();
+            const address = data.display_name || '';
+            
+            // Extract city and state if available
+            const city = data.address?.city || 
+                        data.address?.town || 
+                        data.address?.village || 
+                        data.address?.suburb || '';
+                        
+            const state = data.address?.state || 
+                         data.address?.county || '';
+                         
+            const country = data.address?.country || '';
+            
+            // Format the location string
+            let locationString = '';
+            if (city) locationString += city;
+            if (state && city) locationString += ', ' + state;
+            else if (state) locationString += state;
+            if (country && (city || state)) locationString += ', ' + country;
+            else if (country) locationString += country;
+            
+            form.setValue('location', locationString || address);
+            toast.success('Location detected successfully');
+          } catch (error) {
+            console.error('Error getting address:', error);
+            toast.error('Failed to get your address', { 
+              description: 'Please enter your location manually'
+            });
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          
+          let errorMessage = 'Could not detect your location';
+          if (error.code === 1) {
+            errorMessage = 'Location access was denied';
+          } else if (error.code === 2) {
+            errorMessage = 'Location unavailable';
+          } else if (error.code === 3) {
+            errorMessage = 'Location request timed out';
+          }
+          
+          toast.error(errorMessage);
+        }
+      );
+    } finally {
+      setIsDetectingLocation(false);
     }
   };
   
@@ -202,6 +279,20 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
                     <FormControl>
                       <Input placeholder={t('Optional: City, State, or Region')} {...field} />
                     </FormControl>
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      size="icon"
+                      onClick={detectLocation}
+                      disabled={isDetectingLocation}
+                      title="Detect my location"
+                    >
+                      {isDetectingLocation ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </Button>
                     <VoiceInput 
                       onTranscriptChange={handleVoiceTranscript}
                       isListening={activeVoiceField === 'location'}
